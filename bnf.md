@@ -9,6 +9,7 @@
 
 ## Tokens
 \<string\> ::= '"'(any character)+'"'
+
 \<number\> ::= integer | float
 
 ## Grammar
