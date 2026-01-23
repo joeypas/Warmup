@@ -17,7 +17,9 @@
 \<expr\> ::= \<or_expr\>
 
 \<or_expr\> ::= \<and_expr\> | "or" \<or_expr\>
+
 \<and_expr\> ::= \<not_expr\> | "and" \<and_expr\>
+
 \<not_expr\> ::= [ "not" ] \<primary\>
 
 \<primary\> ::= \<predicate\> | "(" \<expr\> ")"
