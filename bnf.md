@@ -34,3 +34,12 @@
 \<value\> ::= \<number\> | \<string\> | \<resolution\> | "null"
 
 \<resolution\> ::= "YES" | "NO" | "CANCEL"
+
+# Examples
+- volume > 1000
+- probability <= 0.2 and resolution = NO
+- question ~ "Snowpiercer" and (resolution = NO or resolution = CANCEL)
+- resolution is null
+- resolution is not null
+- market_id = "TJsVEaHGVx8v2Z0D2slq"
+        not (probability < 0.05)
