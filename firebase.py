@@ -30,20 +30,46 @@ QUERY_OPERATORS = {
 
 def get_single_query_ids(field: dict) -> set:
     """
-    Returns a set of market ids for those that satisfy the query with
+    returns a set of market ids for the ones that satisfy the query with
     the operator, the value, and the field.
-
-    the field dict must have the following structure:
-    {
-       “Field_name”: str
-       “Operator”: str
-       “Value”: str
-    }
     """
-    # TODO Tristin, finish function that get the ids of markets that satisfy the query
     ids = set()
 
+    field_name = field["Field_name"]
+    operator = field["Operator"]
+    value = field["Value"]
+
+    # firestore  operators
+    firestore_ops = {"<", "<=", "=", "!=", ">", ">="}
+
+    if operator in firestore_ops:
+        # convert '=' to Firestore '=='
+        fs_op = "==" if operator == "=" else operator
+
+        docs = markets_ref.where(field_name, fs_op, value).stream()
+        for doc in docs:
+            data = doc.to_dict()
+            ids.add(data["id"])
+
+    else:
+        # fallback for operators firestore can't handle
+        docs = markets_ref.stream()
+        for doc in docs:
+            data = doc.to_dict()
+            field_value = data.get(field_name)
+
+            if operator == "?=" and isinstance(field_value, str):
+                if value in field_value:
+                    ids.add(data["id"])
+
+            elif value == "empty":
+                if operator == "=" and field_value is None:
+                    ids.add(data["id"])
+                elif operator == "!=" and field_value is not None:
+                    ids.add(data["id"])
+
     return ids
+
 
 
 def get_markets_by_ids(ids:set) -> list[dict]:
