@@ -30,7 +30,7 @@ QUERY_OPERATORS = {
 
 def get_single_query_ids(field: dict) -> set:
     """
-    returns a set of market ids for the ones that satisfy the query with
+    returns a set of market id for the ones that satisfy the query with
     the operator, the value, and the field.
     """
     ids = set()
