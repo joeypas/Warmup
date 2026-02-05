@@ -50,14 +50,11 @@ def get_markets_by_ids(ids:set) -> list[dict]:
     """
     Returns a list of dictionaries, each representing a market from the set of market ids.
     """
-    # TODO Erik, finish this function
     markets = []
     for id in ids:
-        markets.append(
-            db.collection("markets")
-            .where(filter=FieldFilter("id", "==", id))
-            .stream()
-        )
+        # link to getting a doc using get() https://firebase.google.com/docs/firestore/query-data/get-data
+        doc = db.collection("markets").where("id", "==", id).get()[0]
+        markets.append(doc.to_dict())
     return markets
 
 def get_query(query_dict: dict) -> list:
@@ -107,4 +104,3 @@ def get_query(query_dict: dict) -> list:
     # get full market data from set of ids
     final_markets = get_markets_by_ids(ids)
     return final_markets
-
