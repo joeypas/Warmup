@@ -1,5 +1,4 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
+from db import market_collection
 import json
 import sys
 
@@ -24,9 +23,9 @@ def delete_collection(coll_ref, batch_size):
 
 def main ():
     # credit to video resource https://www.youtube.com/watch?v=qsFYq_1BQdk
-    # initialize app with credentials
-    cred = credentials.Certificate("many-markets-db-firebase-adminsdk-fbsvc-24a5086e09.json")
-    firebase_admin.initialize_app(cred)
+    # initialize using function
+    db = market_collection()
+    markets = db.collection("markets")
 
     # get the json file from command line
     json_file = sys.argv[1]
@@ -35,8 +34,6 @@ def main ():
         data = json.load(f)
 
     # clear the contents if there are any docs
-    db = firestore.client()
-    markets = db.collection("markets")
     delete_collection(markets, 100)
 
     # add all markets from the json file
