@@ -9,24 +9,6 @@ firebase_admin.initialize_app(cred)
 db = firestore.client()
 markets_ref = db.collection("markets")
 
-QUERY_OPERATORS = {
-    '<':'<', # numeric fields only
-    '<=':'<=', # numeric fields only
-    '=': '==',
-    '!=':'!=',
-    '>':'>',  # numeric fields only
-    '>=':'>=', # numeric fields only
-    '?=': 'in' # Contains (text fields)
-}
-
-# I think a query can look something like this
-# execution of query:
-# docs = (
-#     db.collection("markets")
-#     .where(filter=FieldFilter(field[Field_Name], QUERY_OPERATORS[field[Operator]], field[Value]))
-#     .stream()
-# )
-
 
 def get_single_query_ids(field: dict) -> set:
     """
@@ -59,7 +41,7 @@ def get_single_query_ids(field: dict) -> set:
             field_value = data.get(field_name)
 
             if operator == "?=" and isinstance(field_value, str):
-                if value in field_value:
+                if value.lower() in field_value.lower():
                     ids.add(data["id"])
 
             elif value == "empty":
