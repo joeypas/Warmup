@@ -1,8 +1,8 @@
 # This file interacts with main to query firebase google cloud storage
 from db import market_collection
+from google.cloud.firestore import Client
 
-
-def get_single_query_ids(field: dict) -> set:
+def get_single_query_ids(field: dict, db: Client) -> set:
     """
     returns a set of market id for the ones that satisfy the query with
     the operator, the value, and the field.
@@ -16,7 +16,7 @@ def get_single_query_ids(field: dict) -> set:
     # firestore  operators
     firestore_ops = {"<", "<=", "=", "!=", ">", ">="}
 
-    db = market_collection()
+    # get markets_ref
     markets_ref = db.collection("markets")
     if operator in firestore_ops:
         # convert '=' to Firestore '=='
@@ -48,11 +48,10 @@ def get_single_query_ids(field: dict) -> set:
 
 
 
-def get_markets_by_ids(ids:set) -> list[dict]:
+def get_markets_by_ids(ids:set, db: Client) -> list[dict]:
     """
     Returns a list of dictionaries, each representing a market from the set of market ids.
     """
-    db = market_collection()
     markets = []
     for id in ids:
         # link to getting a doc using get() https://firebase.google.com/docs/firestore/query-data/get-data
@@ -60,7 +59,7 @@ def get_markets_by_ids(ids:set) -> list[dict]:
         markets.append(doc.to_dict())
     return markets
 
-def get_query(query_dict: dict) -> list:
+def get_query(query_dict: dict) -> list[dict]:
     """
     Returns a list of dictionaries where each dictionary represents a market that satisfies the query dictionary fields
 
@@ -86,46 +85,26 @@ def get_query(query_dict: dict) -> list:
             "resolution": str | None
         }
     """
+    # one db client for all queries
+    db = market_collection()
 
     fields = query_dict["fields"]
     compound_op = query_dict["Compound_Operator"]
 
     if compound_op == "and":
         # intersection
-        id1 = set(get_single_query_ids(fields[0]))
-        id2 = set(get_single_query_ids(fields[1]))
+        id1 = set(get_single_query_ids(fields[0], db))
+        id2 = set(get_single_query_ids(fields[1], db))
         ids = set.intersection(id1, id2)
     elif compound_op == "or":
         # union
-        id1 = set(get_single_query_ids(fields[0]))
-        id2 = set(get_single_query_ids(fields[1]))
+        id1 = set(get_single_query_ids(fields[0], db))
+        id2 = set(get_single_query_ids(fields[1], db))
         ids = set.union(id1, id2)
     else:
         # the set of ids
-        ids = set(get_single_query_ids(fields))
+        ids = set(get_single_query_ids(fields, db))
 
     # get full market data from set of ids
-    final_markets = get_markets_by_ids(ids)
+    final_markets = get_markets_by_ids(ids, db)
     return final_markets
-
-
-def main():
-    field = {
-        "Compound_Operator": "and",
-        "fields": [
-            {
-                "Field_name": "probability",
-                "Operator": ">",   # one of: >, <, =>, =<, =, !=, ?=
-                "Value": 0.5
-            },
-            {
-                "Field_name": "question",
-                "Operator": "?=",
-                "Value": "Will"
-            }
-        ]
-    }
-    print(get_query(field))
-
-if __name__ == "__main__":
-    main()
