@@ -7,7 +7,8 @@ pp.ParserElement.enable_packrat()
 LPAREN, RPAREN = pp.Suppress.using_each("()")
 
 # Keywords
-AND, OR, NOT, IS, NULL = pp.CaselessKeyword(" and "), pp.CaselessKeyword(" or "), pp.CaselessKeyword("not"), pp.CaselessKeyword("is"), pp.CaselessKeyword("null")
+# Added an optional Keyword called "detail"
+AND, OR, NOT, IS, NULL, DETAIL = pp.CaselessKeyword("and"), pp.CaselessKeyword("or"), pp.CaselessKeyword("not"), pp.CaselessKeyword("is"), pp.CaselessKeyword("null"), pp.CaselessKeyword("detail")
 
 # Resolutions
 YES, NO, CANCEL = pp.CaselessKeyword.using_each(("YES", "NO", "CANCEL"))
@@ -63,8 +64,55 @@ expr <<= pp.infix_notation(
     ],
 )
 
-grammar = (expr + pp.StringEnd())
+grammar = (expr + pp.Optional(DETAIL("detail")) + pp.StringEnd())
 
-def parse_query(text: str) -> pp.ParseResults:
-    return grammar.parse_string(text, parse_all=True)
-
+# Changed the arrow for point of error testing so it doesn't have to
+# Be a tuple or a unioned str and pp.ParseResults
+def parse_query(text: str):
+    # A try excpetion in order to catch invalid strings, returns True if valid parse happend and False if not
+    try:
+        return True, grammar.parse_string(text, parse_all=True)
+    except pp.exceptions.ParseException as e:
+        return False, str(e)
+    
+# To dictionary function using an Abstract Syntax Tree
+# This has to work recursively as the depth of each item in the list
+# Can change with each query
+def build_dict(element):
+    if not isinstance(element, pp.ParseResults):
+        # This returns when it gets a number, string or field, ie accepted grammer
+        return element
+    
+    # For Compound Operations (AND /OR) 
+    # As pp.ParseResults behave like List's for len we can use that to determine the input
+    if len(element) == 3 and element[1] in ("and", "or"):
+        return {
+            # Recursive call to see what's to the left and righ of the BO
+            "Compound_Operator": element[1],
+            "Left": build_dict(element[0]),
+            "Right":build_dict(element[2])
+        }
+    
+    # For Unary (Not)
+    if len == 2 and element == "not":
+        return {
+            "Not_Predicate": "not",
+            "Right": build_dict(element[1])
+        }
+    
+    # For the predicates: [field, operator, value]
+    if len(element) == 3 and isinstance(element[0], str):
+        return {
+            "Field_name": element[0],
+            "Operator": element[1],
+            "Value": element[2],
+        }
+    
+    if len(element) == 1:
+        return build_dict(element[0])
+    
+     # If nothing got parsed put it in an error part of the dict
+    return {
+        "Error Elements": [build_dict(e) for e in element]
+    }
+    
