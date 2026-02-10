@@ -1,5 +1,6 @@
 # This file interacts with main to query firebase google cloud storage
 from google.cloud.firestore import Client
+from google.cloud.firestore_v1 import FieldFilter
 
 def get_single_query_ids(field: dict, db: Client) -> set:
     """
@@ -21,7 +22,7 @@ def get_single_query_ids(field: dict, db: Client) -> set:
         # convert '=' to Firestore '=='
         fs_op = "==" if operator == "=" else operator
 
-        docs = markets_ref.where(field_name, fs_op, value).stream()
+        docs = markets_ref.where(filter=FieldFilter(field_name, fs_op, value)).stream()
         for doc in docs:
             data = doc.to_dict()
             ids.add(data["id"])
@@ -54,7 +55,8 @@ def get_markets_by_ids(ids:set, db: Client) -> list[dict]:
     markets = []
     for id in ids:
         # link to getting a doc using get() https://firebase.google.com/docs/firestore/query-data/get-data
-        doc = db.collection("markets").where("id", "==", id).get()[0]
+        # also using filter=FieldFilter is updated way to query https://firebase.google.com/docs/firestore/query-data/queries
+        doc = db.collection("markets").where(filter=FieldFilter("id", "==", id)).get()[0]
         markets.append(doc.to_dict())
     return markets
 

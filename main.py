@@ -21,8 +21,9 @@ def dictionary_refiner(unrf_dict : dict):
     return refined_dict
 
 def main():
-    # Function to determine if we need to exit the program
+    # one db connection for all queries
     db = market_collection()
+    # Function to determine if we need to exit the program
     running = True
     while running:
         user_input_unparsed = input(">> ")
