@@ -1,4 +1,5 @@
 import parser as par
+from firebase import get_query
 # Example of a valid query: 'question == "hello" and volume > 10'
 # Example output [[[['question', '==', 'hello']], 'and', [['volume', '>', 10]]], 'detail']
 

@@ -100,6 +100,25 @@ def build_dict(element):
             "Right": build_dict(element[1])
         }
     
+    # For null field
+
+    if len(element) == 3 and isinstance(element[0], str) and element[2] == "None":
+        return {
+            "Field_name": element[0],
+            "Operator": element[1],
+            "Value": element[2],
+    }
+
+    # For is not null field
+
+    if len(element) == 4 and isinstance(element[0], str) and element[2] == "None":
+        operator_string = str(element[1]) + " " + str(element[2])
+        return {
+            "Field_name": element[0],
+            "Operator": operator_string,
+            "Value": element[2],
+    }
+    
     # For the predicates: [field, operator, value]
     if len(element) == 3 and isinstance(element[0], str):
         return {
@@ -107,6 +126,7 @@ def build_dict(element):
             "Operator": element[1],
             "Value": element[2],
         }
+    
     
     if len(element) == 1:
         return build_dict(element[0])
