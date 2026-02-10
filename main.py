@@ -1,5 +1,7 @@
 import parser as par
 from firebase import get_query
+from db import market_collection
+
 # Example of a valid query: 'question == "hello" and volume > 10'
 # Example output [[[['question', '==', 'hello']], 'and', [['volume', '>', 10]]], 'detail']
 
@@ -7,7 +9,7 @@ from firebase import get_query
 # NEED TO FIX DETAIL
 def dictionary_refiner(unrf_dict : dict):
     refined_dict = {}
-    # First see if theres a compound so we know we have to send two fields
+    # First see if there's a compound so we know we have to send two fields
     if 'Compound_Operator' in unrf_dict:
         refined_dict['Compound_Operator'] = unrf_dict['Compound_Operator']
         left_dict = unrf_dict['Left']
@@ -19,13 +21,15 @@ def dictionary_refiner(unrf_dict : dict):
     return refined_dict
 
 def main():
-    # Funciton to determine if we need to exit the program
+    # one db connection for all queries
+    db = market_collection()
+    # Function to determine if we need to exit the program
     running = True
     while running:
         user_input_unparsed = input(">> ")
         # First check to see if they asked for the help function
         if user_input_unparsed.lower() == "help":
-            # Needs to be correctly typed out, just a place holder
+            # Needs to be correctly typed out, just a placeholder
             help_text = """
             Welcome to our program about market prediction bets.
             ADD MORE IN GREATER DETAIL LATER
@@ -47,7 +51,7 @@ def main():
                 user_refined_dict = dictionary_refiner(user_rough_query_dict)
                 # print(user_refined_dict)
                 # TO BE IMPLEMENTED ON FRIDAY
-                returned_que = get_query(user_refined_dict)
+                returned_que = get_query(user_refined_dict, db)
 
                 # Need to add detail check
                 for query in returned_que:
