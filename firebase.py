@@ -27,27 +27,27 @@ def get_single_query_ids(field: dict, db: Client) -> set:
             data = doc.to_dict()
             ids.add(data["id"])
 
-  else:
-    # fallback for operators firestore can't handle
-    docs = markets_ref.stream()
-    for doc in docs:
-        data = doc.to_dict()
-        field_value = data.get(field_name)
+    else:
+        # fallback for operators firestore can't handle
+        docs = markets_ref.stream()
+        for doc in docs:
+            data = doc.to_dict()
+            field_value = data.get(field_name)
 
-        # contains
-        if operator == "?=" and isinstance(field_value, str):
-            if value in field_value:
-                ids.add(data["id"])
+            # contains
+            if operator == "?=" and isinstance(field_value, str):
+                if value in field_value:
+                    ids.add(data["id"])
 
-        # is empty
-        elif operator == "is" and value == "empty":
-            if field_value is None:
-                ids.add(data["id"])
+            # is empty
+            elif operator == "is" and value == None:
+                if field_value is None:
+                    ids.add(data["id"])
 
-        # is not empty
-        elif operator == "is not" and value == "empty":
-            if field_value is not None:
-                ids.add(data["id"])
+            # is not empty
+            elif operator == "is not" and value == None:
+                if field_value is not None:
+                    ids.add(data["id"])
 
     return ids
 
