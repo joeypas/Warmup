@@ -1,5 +1,4 @@
 # This file interacts with main to query firebase google cloud storage
-from db import market_collection
 from google.cloud.firestore import Client
 
 def get_single_query_ids(field: dict, db: Client) -> set:
@@ -59,7 +58,7 @@ def get_markets_by_ids(ids:set, db: Client) -> list[dict]:
         markets.append(doc.to_dict())
     return markets
 
-def get_query(query_dict: dict) -> list[dict]:
+def get_query(query_dict: dict, db: Client) -> list[dict]:
     """
     Returns a list of dictionaries where each dictionary represents a market that satisfies the query dictionary fields
 
@@ -85,9 +84,6 @@ def get_query(query_dict: dict) -> list[dict]:
             "resolution": str | None
         }
     """
-    # one db client for all queries
-    db = market_collection()
-
     fields = query_dict["fields"]
     compound_op = query_dict["Compound_Operator"]
 
