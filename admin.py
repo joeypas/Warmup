@@ -23,7 +23,7 @@ def delete_collection(coll_ref, batch_size):
 
 def main ():
     # credit to video resource https://www.youtube.com/watch?v=qsFYq_1BQdk
-    # initialize using function
+    # initialize using function from db.py
     db = market_collection()
     markets = db.collection("markets")
 
