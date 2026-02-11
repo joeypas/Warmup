@@ -2,6 +2,17 @@ import pyparsing as pp
 
 pp.ParserElement.enable_packrat()
 
+# Some AST types
+
+def ast_pred(field, op, value):
+    return {"Field_name": field, "Operator": op, "Value": value}
+
+def ast_not(node):
+    return {"Not_Predicate": "not", "Right": node}
+
+def ast_bin(op, left, right):
+    return {"Compound_Operator": op.lower(), "Left": left, "Right": right}
+
 # BASIC PARSERS
 
 LPAREN, RPAREN = pp.Suppress.using_each("()")
@@ -38,13 +49,25 @@ contains = pp.Literal("?=")
 # Predicates
 
 # field <op> value
-comparison_pred = pp.Group(field + comparison + value)
+comparison_pred = pp.Group(field + comparison + value).set_parse_action(
+    # create an ast_pred dict
+    lambda t: ast_pred(t[0][0], t[0][1], t[0][2])
+)
 
 # field '?=' "substring"
-contains_pred = pp.Group(field + contains + value)
+contains_pred = pp.Group(field + contains + value).set_parse_action(
+    # create an ast_pred dict but set the operator
+    lambda t: ast_pred(t[0][0], "?=", t[0][2])
+)
 
 # field is [not]
-is_null_pred = pp.Group(field + IS + pp.Optional(NOT("negated")) + null)
+is_null_pred = pp.Group(field + IS + pp.Optional(NOT("negated")) + null).set_parse_action(
+    lambda t: ast_pred(
+        t[0][0],
+        "is not" if len(t[0]) == 4 else "is",
+        None
+    )
+)
 
 predicate = (is_null_pred | contains_pred | comparison_pred)
 
@@ -52,85 +75,49 @@ predicate = (is_null_pred | contains_pred | comparison_pred)
 
 expr = pp.Forward()
 
-primary = (predicate | pp.Group(LPAREN + expr + RPAREN)("group"))
+primary = (predicate | pp.Group(LPAREN + expr + RPAREN))
+
+def parse_action_not(t):
+    toks = t[0]
+    if len(toks) == 2 and str(toks[0]).lower() == "not":
+        return ast_not(toks[1])
+    return toks[0]
+
+def parse_action_bin(t):
+    toks = t[0]
+    node = toks[0]
+    i = 1
+    while i < len(toks):
+        op = toks[i]
+        rhs = toks[i + 1]
+        node = ast_bin(op, node, rhs)
+        i += 2
+    return node
 
 not_expr = pp.Group(pp.Optional(NOT("not_")) + primary)
 
 expr <<= pp.infix_notation(
-    base_expr=not_expr,
+    base_expr=primary,
     op_list=[
-        (AND, 2, pp.opAssoc.LEFT),
-        (OR, 2, pp.opAssoc.LEFT),
+        (NOT, 1, pp.opAssoc.RIGHT, parse_action_not),
+        (AND, 2, pp.opAssoc.LEFT, parse_action_bin),
+        (OR, 2, pp.opAssoc.LEFT, parse_action_bin),
     ],
 )
 
-grammar = (expr + pp.Optional(DETAIL("detail")) + pp.StringEnd())
+grammar = (expr("ast") + pp.Optional(DETAIL("detail")) + pp.StringEnd())
 
 # Changed the arrow for point of error testing so it doesn't have to
 # Be a tuple or a unioned str and pp.ParseResults
 def parse_query(text: str):
     # A try excpetion in order to catch invalid strings, returns True if valid parse happend and False if not
     try:
-        return True, grammar.parse_string(text, parse_all=True)
+        pr = grammar.parse_string(text, parse_all=True)
+        # detail field states if user requested detail view
+        # ast field is the actual dictionary
+        return True, {
+            "detail": bool(pr.detail),
+            "ast": pr.ast,
+        }
     except pp.exceptions.ParseException as e:
         return False, str(e)
-    
-# To dictionary function using an Abstract Syntax Tree
-# This has to work recursively as the depth of each item in the list
-# Can change with each query
-def build_dict(element):
-    if not isinstance(element, pp.ParseResults):
-        # This returns when it gets a number, string or field, ie accepted grammer
-        return element
-    
-    # For Compound Operations (AND /OR) 
-    # As pp.ParseResults behave like List's for len we can use that to determine the input
-    if len(element) == 3 and element[1] in ("and", "or"):
-        return {
-            # Recursive call to see what's to the left and righ of the BO
-            "Compound_Operator": element[1],
-            "Left": build_dict(element[0]),
-            "Right":build_dict(element[2])
-        }
-    
-    # For Unary (Not)
-    if len == 2 and element == "not":
-        return {
-            "Not_Predicate": "not",
-            "Right": build_dict(element[1])
-        }
-    
-    # For null field
-
-    if len(element) == 3 and isinstance(element[0], str) and element[2] == None:
-        return {
-            "Field_name": element[0],
-            "Operator": element[1],
-            "Value": element[2],
-    }
-
-    # For is not null field
-    if len(element) == 4 and isinstance(element[0], str) and element[3] == None:
-        return {
-            "Field_name": element[0],
-            "Operator": "is not",
-            "Value": None,
-    }
-    
-    # For the predicates: [field, operator, value]
-    if len(element) == 3 and isinstance(element[0], str):
-        return {
-            "Field_name": element[0],
-            "Operator": element[1],
-            "Value": element[2],
-        }
-    
-    
-    if len(element) == 1:
-        return build_dict(element[0])
-    
-     # If nothing got parsed put it in an error part of the dict
-    return {
-        "Error Elements": [build_dict(e) for e in element]
-    }
-    

@@ -83,14 +83,9 @@ def main():
                 print(f">> Error: {user_input_parsed}")
             else:
                 # Does the user want a detail view?
-                detail_idx = list(user_input_parsed).index("detail") if "detail" in list(user_input_parsed) else None
-                detail_requested = True if detail_idx != None else False
-                if detail_requested:
-                    del user_input_parsed[detail_idx]
+                detail_requested = user_input_parsed['detail']
 
-                # Create a dictionary to send over to the firebase.py program
-                user_rough_query_dict = par.build_dict(user_input_parsed)
-                user_refined_dict = dictionary_refiner(user_rough_query_dict)
+                user_refined_dict = dictionary_refiner(user_input_parsed['ast'])
 
                 # User input validition for text and number fields
                 if valid_dict(user_refined_dict):
