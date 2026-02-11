@@ -102,7 +102,7 @@ def build_dict(element):
     
     # For null field
 
-    if len(element) == 3 and isinstance(element[0], str) and element[2] == "None":
+    if len(element) == 3 and isinstance(element[0], str) and element[2] == None:
         return {
             "Field_name": element[0],
             "Operator": element[1],
@@ -111,7 +111,7 @@ def build_dict(element):
 
     # For is not null field
 
-    if len(element) == 4 and isinstance(element[0], str) and element[2] == "None":
+    if len(element) == 4 and isinstance(element[0], str) and element[3] == None:
         return {
             "Field_name": element[0],
             "Operator": "is not",
