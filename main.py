@@ -29,6 +29,10 @@ def valid_dict(refined_dict : dict):
             valid = False
         elif field == 'probability' and operator == '?=':
             valid = False
+        elif field == 'question' and operator not in ['=', '?=']:
+            valid = False
+        elif field == 'id' and operator != ['=', '?=']:
+            valid = False
     # For when there are multiple fields
     else:
         for fields in refined_dict['fields']:
