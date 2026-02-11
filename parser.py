@@ -44,21 +44,51 @@ comparison = pp.one_of("= != >= <= < >", as_keyword=False)
 
 contains = pp.Literal("?=")
 
+numeric_fields = ["volume", "probability"]
+string_fields = ["id", "question"]
+
+def validate_field(_, loc, toks):
+    """
+    Check that Fields match both value type and operator
+    example: question = 5 *NOT VALID*, question > "test" *NOT VALID*
+    """
+    field = toks[0][0]
+    op = toks [0][1]
+    value = toks[0][2]
+    if field in numeric_fields and op not in "= != >= <= < >":
+        raise pp.ParseFatalException(op, loc, f"Field '{field}' expects operator of '= != >= <= < >'")
+    if field in string_fields and op not in "= != ?=":
+        raise pp.ParseFatalException(op, loc, f"Field '{field}' expects operator of '= != ?='")
+    if field in numeric_fields and not (isinstance(value, (int, float))):
+        raise pp.ParseFatalException(type(value).__name__, loc, f"Field '{field}' expects a numeric type")
+    elif field in string_fields and not (isinstance(value, str)):
+        raise pp.ParseFatalException(type(value).__name__, loc, f"Field '{field}' expects a string type")
+    return toks
+
+
 # COMPLEX PARSERS
 
 # Predicates
 
 # field <op> value
-comparison_pred = pp.Group(field + comparison + value).set_parse_action(
-    # create an ast_pred dict
-    lambda t: ast_pred(t[0][0], t[0][1], t[0][2])
-)
+comparison_pred = (
+    pp.Group(field + comparison + value)
+    # Make sure types match up, error out if not
+    .set_parse_action(validate_field)
+    .add_parse_action(
+        # create an ast_pred dict
+        lambda t: ast_pred(t[0][0], t[0][1], t[0][2])
+    ))
 
 # field '?=' "substring"
-contains_pred = pp.Group(field + contains + value).set_parse_action(
-    # create an ast_pred dict but set the operator
-    lambda t: ast_pred(t[0][0], "?=", t[0][2])
-)
+contains_pred = (
+    pp.Group(field + contains + value)
+    # Make sure types match up, error out if not
+    .set_parse_action(validate_field)
+    .add_parse_action(
+        # create an ast_pred dict but set the operator
+        lambda t: ast_pred(t[0][0], "?=", t[0][2])
+    ))
 
 # field is [not]
 is_null_pred = pp.Group(field + IS + pp.Optional(NOT("negated")) + null).set_parse_action(
@@ -119,5 +149,7 @@ def parse_query(text: str):
             "detail": bool(pr.detail),
             "ast": pr.ast,
         }
+    except pp.ParseFatalException as e:
+        return False, str(e)
     except pp.exceptions.ParseException as e:
         return False, str(e)

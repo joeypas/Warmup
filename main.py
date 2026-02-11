@@ -29,35 +29,6 @@ def dictionary_refiner(unrf_dict : dict):
         refined_dict['fields'] = unrf_dict
     return refined_dict
 
-# Validation of operators
-def valid_dict(refined_dict : dict):
-    valid = True
-    if isinstance(refined_dict['fields'], dict):
-        field = refined_dict['fields']['Field_name']
-        operator = refined_dict['fields']['Operator']
-        if field == 'volume' and operator == '?=':
-            valid = False
-        elif field == 'probability' and operator == '?=':
-            valid = False
-        elif field == 'question' and operator not in ['=', '?=', '!=']:
-            valid = False
-        elif field == 'id' and operator not in ['=', '?=', '!=']:
-            valid = False
-    # For when there are multiple fields
-    else:
-        for fields in refined_dict['fields']:
-            field = fields['Field_name']
-            operator = fields['Operator']
-            if field == 'volume' and operator == '?=':
-                valid = False
-            elif field == 'probability' and operator == '?=':
-                valid = False
-            elif field == 'question' and operator not in ['=', '?=', '!=']:
-                valid = False
-            elif field == 'id' and operator not in ['=', '?=', '!=']:
-                valid = False
-    return valid
-
 
 def main():
     # one db connection for all queries
@@ -121,21 +92,17 @@ def main():
                 user_refined_dict = dictionary_refiner(user_input_parsed['ast'])
 
                 # User input validition for text and number fields
-                if valid_dict(user_refined_dict):
-                    returned_que = order_dicts(get_query(user_refined_dict, db))
-                    # Need to add detail check
-                    if detail_requested:
-                        print(detail_view(returned_que))
-                    else:
-                        for query in returned_que:
-                            """
-                            If: detail print out the whole thing
-                            else:
-                            """
-                            print(f">> id:{query['id']} | Question: {query['question']}")
+                returned_que = order_dicts(get_query(user_refined_dict, db))
+                # Need to add detail check
+                if detail_requested:
+                    print(detail_view(returned_que))
                 else:
-                    print(">> Error! You inputted a text/number operator on an incompatiable field.")
-                    print(">> Type help for instructions on proper querying.")
+                    for query in returned_que:
+                        """
+                        If: detail print out the whole thing
+                        else:
+                        """
+                        print(f">> id:{query['id']} | Question: {query['question']}")
 
 
 if __name__ == "__main__":
