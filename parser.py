@@ -40,7 +40,7 @@ null = NULL.copy().set_parse_action(pp.replace_with(None))
 value = (number | string).set_name("value")("value")
 
 # Operators
-comparison = pp.one_of("== != >= <= < >", as_keyword=False)
+comparison = pp.one_of("= != >= <= < >", as_keyword=False)
 
 contains = pp.Literal("?=")
 
