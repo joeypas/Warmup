@@ -112,11 +112,10 @@ def build_dict(element):
     # For is not null field
 
     if len(element) == 4 and isinstance(element[0], str) and element[2] == "None":
-        operator_string = str(element[1]) + " " + str(element[2])
         return {
             "Field_name": element[0],
-            "Operator": operator_string,
-            "Value": element[2],
+            "Operator": "is not",
+            "Value": None,
     }
     
     # For the predicates: [field, operator, value]
