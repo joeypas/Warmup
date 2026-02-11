@@ -134,7 +134,7 @@ def main():
                             """
                             print(f">> id:{query['id']} | Question: {query['question']}")
                 else:
-                    print(">> Error! You inputted a text operator on a number field.")
+                    print(">> Error! You inputted a text/number operator on an incompatiable field.")
                     print(">> Type help for instructions on proper querying.")
 
 
