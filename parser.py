@@ -110,7 +110,6 @@ def build_dict(element):
     }
 
     # For is not null field
-
     if len(element) == 4 and isinstance(element[0], str) and element[3] == None:
         return {
             "Field_name": element[0],
