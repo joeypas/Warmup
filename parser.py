@@ -25,7 +25,7 @@ AND, OR, NOT, IS, NULL, DETAIL = pp.CaselessKeyword("and"), pp.CaselessKeyword("
 YES, NO, CANCEL = pp.CaselessKeyword.using_each(("YES", "NO", "CANCEL"))
 
 # Fields
-MARKET_ID, QUESTION, VOLUME, PROBABILITY, RESOLUTION = pp.Keyword.using_each(("market_id", "question", "volume", "probability", "resolution"))
+MARKET_ID, QUESTION, VOLUME, PROBABILITY, RESOLUTION = pp.Keyword.using_each(("id", "question", "volume", "probability", "resolution"))
 
 field = (MARKET_ID | QUESTION | VOLUME | PROBABILITY | RESOLUTION)
 
@@ -40,7 +40,7 @@ null = NULL.copy().set_parse_action(pp.replace_with(None))
 value = (number | string).set_name("value")("value")
 
 # Operators
-comparison = pp.one_of("== != >= <= < >", as_keyword=False)
+comparison = pp.one_of("= != >= <= < >", as_keyword=False)
 
 contains = pp.Literal("?=")
 
