@@ -36,7 +36,7 @@ def get_single_query_ids(field: dict, db: Client) -> set:
 
             # contains
             if operator == "?=" and isinstance(field_value, str):
-                if value in field_value:
+                if value.lower() in field_value.lower():
                     ids.add(data["id"])
 
             # is empty
