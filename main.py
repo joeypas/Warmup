@@ -39,9 +39,9 @@ def valid_dict(refined_dict : dict):
             valid = False
         elif field == 'probability' and operator == '?=':
             valid = False
-        elif field == 'question' and operator not in ['=', '?=']:
+        elif field == 'question' and operator not in ['=', '?=', '!=']:
             valid = False
-        elif field == 'id' and operator != ['=', '?=']:
+        elif field == 'id' and operator not in ['=', '?=', '!=']:
             valid = False
     # For when there are multiple fields
     else:
@@ -51,6 +51,10 @@ def valid_dict(refined_dict : dict):
             if field == 'volume' and operator == '?=':
                 valid = False
             elif field == 'probability' and operator == '?=':
+                valid = False
+            elif field == 'question' and operator not in ['=', '?=', '!=']:
+                valid = False
+            elif field == 'id' and operator not in ['=', '?=', '!=']:
                 valid = False
     return valid
 
@@ -66,8 +70,37 @@ def main():
         if user_input_unparsed.lower() == "help":
             # Needs to be correctly typed out, just a placeholder
             help_text = """
-            Welcome to our program about market prediction betting markets. 
-            Example of a valid query: 'volume > 1000'
+            Welcome to our program about market prediction betting markets. To query the program you can use
+            one or two of the following valid fields (you can join two queries with an 'and' or an 'or'):
+                id (string)
+                question (string)
+                volume (number)
+                probability (number)
+                resolution (enum | null)
+
+            Ways to query fields:
+                > : Greater than (numeric fields only)
+                < : Less than (numeric fields only)
+                => : Greater than or equal (numeric fields only)
+                =< : Less than or equal (numeric fields only)
+                =: Equal to 
+                ?= Contains (text fields only)
+                != Not equal to 
+
+            Example of a valid queries:
+                resolution is not null
+                resolution is null 
+                probability > 0.5
+                question ?= “will”
+                volume < 1000
+                id = “TJsVEaHGVx8v2Z0D2slq”
+                id != “TJsVEaHGVx8v2Z0D2slq”
+                probability > 0.5 and question ?= “will”
+            
+            Make sure if your value is a string for a field i.e the “TJsVEaHGVx8v2Z0D2slq” in id = “TJsVEaHGVx8v2Z0D2slq”,
+            you must put it between double quotes. 
+            
+            In order to exit the program simply type 'exit'!
             """
             print(help_text)
         elif user_input_unparsed.lower() == "exit":

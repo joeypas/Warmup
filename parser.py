@@ -25,7 +25,7 @@ AND, OR, NOT, IS, NULL, DETAIL = pp.CaselessKeyword("and"), pp.CaselessKeyword("
 YES, NO, CANCEL = pp.CaselessKeyword.using_each(("YES", "NO", "CANCEL"))
 
 # Fields
-MARKET_ID, QUESTION, VOLUME, PROBABILITY, RESOLUTION = pp.Keyword.using_each(("market_id", "question", "volume", "probability", "resolution"))
+MARKET_ID, QUESTION, VOLUME, PROBABILITY, RESOLUTION = pp.Keyword.using_each(("id", "question", "volume", "probability", "resolution"))
 
 field = (MARKET_ID | QUESTION | VOLUME | PROBABILITY | RESOLUTION)
 
