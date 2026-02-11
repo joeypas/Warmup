@@ -1,9 +1,19 @@
 import parser as par
 from firebase import get_query
 from db import market_collection
+from tabulate import tabulate
 
 # Example of a valid query: 'question == "hello" and volume > 10'
 # Example output [[[['question', '==', 'hello']], 'and', [['volume', '>', 10]]], 'detail']
+
+ORDER = ["id", "question", "volume", "probability", "resolution"]
+
+def order_dicts(responses):
+    return [{k: r.get(k) for k in ORDER} for r in responses]
+
+def detail_view(responses):
+    return tabulate(responses, headers="keys", maxcolwidths=[None, 40, None, None], tablefmt="grid")
+
 
 # Refines the rough dictionary into usable date for the firebase
 def dictionary_refiner(unrf_dict : dict):
@@ -65,31 +75,39 @@ def main():
         else:
             # Parse the query from our parser
             success, user_input_parsed = par.parse_query(user_input_unparsed)
+
+
             # First see if the user input is valid
             if not success:
                 print(">> Invalid query! Type 'help' to see how to input a valid query")
                 print(f">> Error: {user_input_parsed}")
             else:
+                # Does the user want a detail view?
+                detail_idx = list(user_input_parsed).index("detail") if "detail" in list(user_input_parsed) else None
+                detail_requested = True if detail_idx != None else False
+                if detail_requested:
+                    del user_input_parsed[detail_idx]
+
                 # Create a dictionary to send over to the firebase.py program
                 user_rough_query_dict = par.build_dict(user_input_parsed)
                 user_refined_dict = dictionary_refiner(user_rough_query_dict)
-        
+
                 # User input validition for text and number fields
                 if valid_dict(user_refined_dict):
-                    returned_que = get_query(user_refined_dict, db)
+                    returned_que = order_dicts(get_query(user_refined_dict, db))
                     # Need to add detail check
-                    for query in returned_que:
-                        """
-                        If: detail print out the whole thing
-                        else:
-                        """
-                        print(f">> id:{query['id']} | Question: {query['question']}")
+                    if detail_requested:
+                        print(detail_view(returned_que))
+                    else:
+                        for query in returned_que:
+                            """
+                            If: detail print out the whole thing
+                            else:
+                            """
+                            print(f">> id:{query['id']} | Question: {query['question']}")
                 else:
                     print(">> Error! You inputted a text operator on a number field.")
                     print(">> Type help for instructions on proper querying.")
-
-            
-              
 
 
 if __name__ == "__main__":
