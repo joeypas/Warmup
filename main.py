@@ -38,7 +38,7 @@ def main():
     while running:
         user_input_unparsed = input(">> ")
         # First check to see if they asked for the help function
-        if user_input_unparsed.lower() == "help":
+        if user_input_unparsed.lower().strip() == "help":
             # Needs to be correctly typed out, just a placeholder
             help_text = """
             Welcome to our program about market prediction betting markets. To query the program you can use
